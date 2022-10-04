@@ -1,0 +1,204 @@
+---
+title: "Testing Procedure"
+author: "Yannick Kälber"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r Data}
+
+library(readxl) # package, needed for importing the data in .xlsx format
+
+Daten <- read_excel("Daten.xlsx", sheet = 1) # importing the data
+
+freq <- 120
+
+data <- Daten[c(seq(freq, nrow(Daten), freq)), ]
+
+m <- log((data$icape)^(1)) # predictor variable
+y <- log(data$stocks[-1] / data$stocks[-length(data$stocks)]) # stock returns
+
+```
+
+```{r Bayes information criterion (BIC)}
+
+library(dynlm) # package needed for regression
+
+# computing the BIC for AR(p) model
+
+BIC <- function(model) {
+  
+  ssr <- sum(model$residuals^2)
+  t <- length(model$residuals)
+  npar <- length(model$coef)
+  
+  return(
+    round(c("p" = npar - 1,
+          "BIC" = log(ssr/t) + npar * log(t)/t,
+          "R2" = summary(model)$r.squared), 4)
+  )
+} # defining a new function to estimate the order of regression p by minimizing BIC
+
+order <- 1:(12 * (length(m) / 100)^(1/4)) # looping BIC over models of different orders, maxed at (Schwert 1989) suggestion
+
+BICs <- sapply(order, function(x) 
+        "AR" = BIC(dynlm(ts(m) ~ L(ts(m), 1:x))))
+
+p <- BICs[, which.min(BICs[2, ])][1] # selecting the AR model with the smallest BIC
+
+p
+
+```
+
+```{r Bonferroni Q-test: Part 1}
+
+library(quantmod) # necessary library
+
+# Step 1
+
+se_beta <- summary(lm(y[-c(1:p)] ~ m[(p+1):(length(m)-1)]))$coefficients[2, 2] # standard error of the estimation of beta
+
+y_3 <- diff(m) # first order difference of predictor variable
+x_3_1 <- m[-length(m)] # first ADF variable
+
+lagged_differences_matrix_2 <- matrix(nrow = length(x_3_1), ncol = (p+2)) # setting up data matrix for ADF regression
+  
+for (i in 1:p) {
+  lagged_differences_matrix_2[, i] <- diff(Lag(m, k = i)) # lagged differences
+}
+
+lagged_differences_matrix_2[, p+1] <- x_3_1 # adding first ADF variable
+lagged_differences_matrix_2[, p+2] <- y_3 # adding regressand
+
+lagged_differences_matrix_2 <- as.data.frame(lagged_differences_matrix_2) # converting matrix into data frame for the lm() function
+
+names(lagged_differences_matrix_2)[p+2] <- "y"
+names(lagged_differences_matrix_2)[p+1] <- "first ADF variable"
+
+psi_coeffcients <- coef(summary(lm(y ~ ., data = lagged_differences_matrix_2, na.action=na.exclude)))[2:(p+1), 1] # coefficients of the lagged differences
+
+u <- summary(lm(y[-c(1:p)] ~ m[(p+1):(length(m)-1)]))$residuals # residuals from the first regression in this step
+e <- summary(lm(y ~ ., data = lagged_differences_matrix_2, na.action=na.exclude))$residuals # residuals from the second regression in this step
+
+var_u <- 1 / (length(u) - 2) * sum(u^2) # variance of u
+var_e <- 1 / (length(e) - 2) * sum(e^2) # variance of e
+co_var <- 1 / (length(u) - 2) * sum(u * e) # covariance of u and e
+cor <- round(co_var / (sqrt(var_u) * sqrt(var_e)), 3) # correlation of u and e
+
+omega <- var_e / (1-sum(psi_coeffcients))^2
+
+# Step 2
+
+AR <- ar.ols(m[-length(m)], # autoregression model
+       order.max = 1, 
+       aic = F,
+       demean = F, 
+       intercept = T)
+
+se_rho <- AR$asy.se.coef$ar[match(max(AR$ar), AR$ar)] # standard error of the largets autoregressive root
+v <-AR$resid[-(1:1)] # residuals
+
+var_v <- (1 / (length(v) - 2)) * sum(v^2) # variance of u
+
+# Step 3
+
+rho_GLS <- 1 - 7/length(m) # stationary with no linear time trend as alternative
+
+y_1 <- c(m[1], m[2:(length(m)-1)] - rho_GLS * m[1:(length(m) - 2)]) # regressand vector
+x_1 <- c(1, rep(1 - rho_GLS, length(m) - 2)) # regressor vector
+
+my_GLS <- coef(summary(lm(y_1 ~ -1 + x_1)))[1] # de-meaning coefficient
+x_de_meaned <- m[-length(m)] - my_GLS # de-meaned predictor variable
+
+y_2 <- diff(x_de_meaned) # firt order difference of de-meaned predictor variable
+x_2_1 <- x_de_meaned[-length(x_de_meaned)] # first ADF variable
+
+lagged_differences_matrix <- matrix(nrow = length(x_2_1), ncol = (p+2)) # setting up data matrix for ADF regression
+  
+for (i in 1:p) {
+  lagged_differences_matrix[, i] <- diff(Lag(x_de_meaned, k = i)) # lagged differences
+}
+
+lagged_differences_matrix[, p+1] <- x_2_1 # adding first ADF variable
+lagged_differences_matrix[, p+2] <- y_2 # adding regressand
+
+lagged_differences_matrix <- as.data.frame(lagged_differences_matrix) # converting matrix into data frame for the lm() function
+
+names(lagged_differences_matrix)[p+2] <- "y"
+names(lagged_differences_matrix)[p+1] <- "DF-GLS"
+
+DF_GLS <- round(coef(summary(lm(y ~ . -1, data = lagged_differences_matrix, na.action=na.exclude)))[p+1, 3], 1)
+
+round(cor, 3)
+
+```
+
+In the paper Implementing the econometric methods in "Efficient tests of stock return predictability", Campbell and Yogo (2005) provide a table (Table 2-11) to get the confidence interval [c, c] corresponding to the DF-GLS statistic and δ (cor).
+
+```{r Confidence Interval for the Largest Autoregressive Root}
+
+min_c <-  -4.084 # add the minimum c value
+max_c <-  1.804 # add the maximum c value
+
+min_rho <- 1 + min_c/length(u) # left bound of the confidence interval for the largest autoregressive root rho
+max_rho <- 1 + max_c/length(v) # right bound of the confidence interval for the largest autoregressive root rho
+
+round(min_rho, 3)
+round(max_rho, 3)
+
+```
+
+```{r Bonferroni Q-test: Part 2}
+
+lower_cleaned_y <- y[-c(1:p)]-co_var*(m[-c(1:(p+1))]-max_rho*m[(1+p):(length(m)-1)])/(sqrt(var_e)*sqrt(omega))
+
+lower_beta_estimate <- summary(lm(lower_cleaned_y ~ m[(p+1):(length(m)-1)]))$coefficients[2, 1]
+
+upper_cleaned_y <- y[-c(1:p)]-co_var*(m[-c(1:(p+1))]-min_rho*m[(1+p):(length(m)-1)])/(sqrt(var_e)*sqrt(omega))
+
+upper_beta_estimate <- summary(lm(upper_cleaned_y ~ m[(p+1):(length(m)-1)]))$coefficients[2, 1]
+
+# 90% confidence intervall
+
+lower_CI <- lower_beta_estimate + ((length(lower_cleaned_y)-2) / 2) * (co_var / (sqrt(var_e)*sqrt(omega))) * (omega / var_v - 1) * se_rho^2 - 1.645 * sqrt(1-cor^2)*se_beta
+
+upper_CI <- upper_beta_estimate + ((length(lower_cleaned_y)-2) / 2) * (co_var / (sqrt(var_e)*sqrt(omega))) * (omega / var_v - 1) * se_rho^2 + 1.645 * sqrt(1-cor^2)*se_beta
+
+if ((0 < lower_CI) | (0 > upper_CI) ) {
+  print("This variable seems to be predictive!")
+} else {
+  print("This variable seems not to be predictive!")
+}
+
+round(lower_CI, 3)
+round(upper_CI, 3)
+
+beta <- c()
+kkk <- matrix(nrow = (length(seq(min_rho, max_rho, 0.001))), ncol = 3)
+f <- 1
+
+for(i in seq(min_rho, max_rho, 0.001)) {
+  
+  cleaned_y <- y[-c(1:p)]-co_var*(m[-c(1:(p+1))]-i*m[(1+p):(length(m)-1)])/(sqrt(var_e)*sqrt(omega))
+
+  beta <- summary(lm(cleaned_y ~ m[(p+1):(length(m)-1)]))$coefficients[2, 1]  
+  
+kkk[f, 1] <- beta + ((length(lower_cleaned_y)-2) / 2) * (co_var / (sqrt(var_e)*sqrt(omega))) * (omega / var_v - 1) * se_rho^2 - 1.645 * sqrt(1-cor^2)*se_beta
+
+kkk[f, 2] <- beta + ((length(lower_cleaned_y)-2) / 2) * (co_var / (sqrt(var_e)*sqrt(omega))) * (omega / var_v - 1) * se_rho^2 + 1.645 * sqrt(1-cor^2)*se_beta
+
+f <- f + 1
+    
+}
+
+matplot(kkk,
+        x = seq(min_rho, max_rho, 0.001),
+        type = "l",
+        lwd = 2,
+        ylab = "beta",
+        xlab = "rho")
+abline(h = 0, lwd = 1)
+abline(v = mean(seq(min_rho, max_rho, 0.001)), lwd = 1)
+abline(h = (max(kkk[, 2]) + min(min(kkk[, 1]))) / 2, lwd = 1)
+
+```
