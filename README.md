@@ -1,4 +1,4 @@
-# Efficient-Tests-of-Stock-Return-Predictability
+# Efficient Tests of Stock Return Predictability
 This R code implements the Bonferroni Q test from Yogo and Campbell's (2006) paper "Efficient Tests of Stock Return Predictability.
 
 
