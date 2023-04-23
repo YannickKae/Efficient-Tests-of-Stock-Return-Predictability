@@ -1,24 +1,29 @@
 # Efficient Tests of Stock Return Predictability
-This R code implements the Bonferroni Q test from Yogo and Campbell's (2006) paper "Efficient Tests of Stock Return Predictability.
 
+This repository contains an R implementation of the Bonferroni Q test from Yogo and Campbell's (2006) paper "Efficient Tests of Stock Return Predictability." The code tests the predictability of stock returns by analyzing the relationship between a predictor variable and stock returns using advanced econometric methods.
 
+## Overview
 
-In the first block of code, the function BIC is defined and used to determine the optimal order p of an autoregressive (AR) model by minimizing the Bayesian information criterion (BIC) on a dataset ts(m). The AR model is then fit using the dynlm package.
+The R code in this repository is divided into several blocks that perform different tasks:
 
-In the second block of code, several intermediate steps are performed in preparation for performing a Bonferroni Q-test. These steps include:
+1. **Bayesian Information Criterion (BIC) calculation**: This block defines the BIC function and uses it to determine the optimal order p of an autoregressive (AR) model by minimizing the BIC on a dataset `ts(m)`. The AR model is then fit using the `dynlm` package.
 
-Estimating the standard error of the slope coefficient (se_beta) from a linear regression of y[-c(1:p)] on m[(p+1):(length(m)-1)].
+2. **Intermediate steps for Bonferroni Q-test**: This block performs several intermediate steps in preparation for the Bonferroni Q-test. These steps include estimating the standard error of the slope coefficient, calculating the first-order difference of the predictor variable, setting up a matrix to store lagged differences, and calculating residuals, variances, and covariance, among others.
 
-Calculating the first-order difference of the predictor variable m and assigning the result to y_3.
+3. **Bonferroni Q-test**: The final block of code performs the Bonferroni Q-test using the intermediate values calculated in the previous step. The test is used to determine whether the slope coefficient beta of the linear regression is significantly different from 0. This can be used to test the hypothesis that the predictor variable is related to the response variable (stock returns).
 
-Assigning the values of m without the last element to a new variable x_3_1.
+## Getting Started
 
-Setting up a matrix lagged_differences_matrix_2 to store lagged differences of m and the variables x_3_1 and y_3.
+To use the code in this repository, follow these steps:
 
-Regressing y on the lagged differences and x_3_1 using lm and storing the coefficients in a variable psi_coeffcients.
+1. Ensure you have R installed on your system.
+2. Install the necessary R packages: `readxl`, `dynlm`, and `quantmod`.
+3. Clone this repository or download the R script.
+4. Modify the script to load your dataset by replacing the file name and sheet name in the `read_excel()` function.
+5. Run the script in your favorite R environment.
 
-Calculating the residuals u and e from the two linear regressions performed in this step and their variances and covariance.
+## Results Interpretation
 
-Calculating the correlations cor and cor_new between u and e and y[-c(1:p)] and e, respectively.
+The output of the Bonferroni Q-test will help you determine whether the predictor variable is related to the stock returns. If the test indicates a significant relationship, the variable can be considered predictive. Otherwise, it is not predictive. Additionally, a plot is generated to visualize the relationship between different values of rho and beta.
 
-The Bonferroni Q-test is then performed in the third block of code using these intermediate values. The test is used to determine whether the slope coefficient beta of the linear regression of y[-c(1:p)] on m[(p+1):(length(m)-1)] is significantly different from 0. This can be used to test the hypothesis that the predictor variable m is related to the response variable y.
+Happy coding and stock return analysis!
