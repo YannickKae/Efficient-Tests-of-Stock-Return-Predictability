@@ -1,5 +1,12 @@
 # Efficient Tests of Stock Return Predictability
 
+<p align="center">
+  <img src="Header.jpg" style="width:100%">
+</p>
+<p align="center">
+  <i>Regression Model</i>
+</p>
+
 This repository contains an R implementation of the Bonferroni Q test from Yogo and Campbell's (2006) paper "Efficient Tests of Stock Return Predictability." The code tests the predictability of stock returns by analyzing the relationship between a predictor variable and stock returns using advanced econometric methods.
 
 ## Overview
