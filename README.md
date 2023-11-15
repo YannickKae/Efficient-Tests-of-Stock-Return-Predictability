@@ -1,15 +1,27 @@
 # Efficient Tests of Stock Return Predictability
 
 <p align="center">
-  <img src="Header.jpg" style="width:100%">
+  <img src="Header.png" style="width:100%">
 </p>
 <p align="center">
-  <i>Regression Model</i>
+  <i>Simulated Returns with highly persistent Reggressor</i>
 </p>
 
 Predicting stock returns, especially using financial measures such as the earnings-price ratio (E/P), received considerable academic attention in the 1970s and 1980s. Most research uses ordinary least squares (OLS) regression, with stock returns as the dependent variable against lagged financial predictors. However, their inference based on first-order-asymptotics might be spurious, because the OLS estimator is 2nd order biased, and its t-statistic has a non-normal limit distribution, if the predictor is highly persistent (long-memory) and its innovations are closely correlated with the regression disturbances. The former is a common property of many relevant financial time series.
 
+$$
+r_t = \alpha + \beta x_{t-1} + u_t
+$$
+
+$$
+x_t = \gamma + \rho x_{t-1} + e_t
+$$
+
 [Campbell and Yogo (2006)](https://www.sciencedirect.com/science/article/abs/pii/S0304405X05002151) address these limitations by proposing the **Bonferroni Q-test**. This test refines the infeasible uniformly most powerful Q-test by applying the Bonferroni method.
+
+$$
+Q(\beta_0, \rho) = \frac{\sum_{t=1}^{T} x^{\mu}_{t-1} \left[ r_t - \beta_0 x_{t-1} - \beta_{ue} (x_t - \rho x_{t-1}) \right]}{\sigma_u (1 - \delta^2)^{1/2} \left( \sum_{t=1}^{T} x^{\mu 2}_{t-1} \right)^{1/2}}
+$$
 
 ## Overview
 
@@ -23,6 +35,9 @@ The R code implements the testing procedure and is divided into several steps:
 
 ## Results Interpretation
 
-The output of the Bonferroni Q-test will help you determine whether the predictor variable is related to the stock returns. If the test indicates a significant relationship, the variable can be considered predictive. Otherwise, it is not predictive. Additionally, a plot is generated to visualize the relationship between different values of rho and beta.
-
-Happy coding and stock return analysis!
+<p align="center">
+  <img src="Result.png" style="width:100%">
+</p>
+<p align="center">
+  <i>OLS estimator's Bonferroni Confidence Intervals as a Function of Rho</i>
+</p>
