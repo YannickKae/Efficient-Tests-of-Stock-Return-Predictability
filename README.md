@@ -23,15 +23,30 @@ $$
 Q(\beta_0, \rho) = \frac{x_0^\mu(r_1 - \beta_0 x_0 - \beta_{ue}(x_1 - \rho x_0)) + \ldots + x_{T-1}^\mu(r_T - \beta_0 x_{T-1} - \beta_{ue}(x_T - \rho x_{T-1}))}{\sigma_u \sqrt{1 - \delta^2} \sqrt{x_0^{\mu 2} + \ldots + x_{T-1}^{\mu 2}}}
 $$
 
-## Overview
+## Procedure
 
-The R code implements the testing procedure and is divided into several steps:
+The R code implements the testing procedure as described in the paper *Implementing the Econometric Methods in “Efficient Tests of Stock Return Predictability”* (2005) and is divided into several steps:
 
-1. **Bayesian Information Criterion (BIC) calculation**: This block defines the BIC function and uses it to determine the optimal order p of an autoregressive (AR) model by minimizing the BIC on a dataset `ts(m)`. The AR model is then fit using the `dynlm` package.
+### Data Preparation
+- **Importing Data**: The script imports stock market data from an Excel file using the `readxl` library. It specifically selects rows based on a predefined frequency (`freq`).
+- **Variable Definition**: Defines `m` as the log-transformed predictor variable (e.g., 'icape') and `y` as the log difference of stock returns.
 
-2. **Intermediate steps for Bonferroni Q-test**: This block performs several intermediate steps in preparation for the Bonferroni Q-test. These steps include estimating the standard error of the slope coefficient, calculating the first-order difference of the predictor variable, setting up a matrix to store lagged differences, and calculating residuals, variances, and covariance, among others.
+### Bayes Information Criterion (BIC)
+- **Function Definition**: A function is created to calculate the Bayesian Information Criterion (BIC) for AR(p) models. This function evaluates the BIC value, aiding in model selection.
+- **Model Selection**: Iterates over different AR(p) models and selects the one with the smallest BIC, determining the optimal number of lags (p) for the AR model.
 
-3. **Bonferroni Q-test**: The final block of code performs the Bonferroni Q-test using the intermediate values calculated in the previous step. The test is used to determine whether the slope coefficient beta of the linear regression is significantly different from 0. This can be used to test the hypothesis that the predictor variable is related to the response variable (stock returns).
+### Bonferroni Q-test: Part 1
+- **Step 1**: Calculates the standard error of β and sets up a data matrix for Augmented Dickey-Fuller (ADF) regression to estimate ψ coefficients.
+- **Step 2**: Performs an autoregression on the predictor variable to estimate the standard error of ρ and its variance.
+- **Step 3**: Computes the DF-GLS statistic, necessary for unit root testing in the AR(p) model, involving de-meaning the predictor variable and running ADF regression.
+
+### Confidence Interval for the Largest Autoregressive Root
+- **Interval Calculation**: Determines the confidence interval for the largest autoregressive root (ρ) using predefined values from Campbell and Yogo (2005).
+
+### Bonferroni Q-test: Part 2
+- **Adjusting and Estimating β**: Adjusts the stock returns for estimated ρ values and re-estimates β.
+- **90% Confidence Interval**: Calculates the 90% confidence interval for β, incorporating computed standard errors and variance terms. This interval is critical for hypothesis testing regarding the predictor's predictive ability.
+- **Graphical Representation**: Plots the confidence intervals against ρ values to visually represent the variable's predictive ability across different ρ values.
 
 ## Results Interpretation
 
