@@ -14,13 +14,13 @@ r_t = \alpha + \beta x_{t-1} + u_t
 $$
 
 $$
-x_t = \gamma + \rho x_{t-1} + e_t
+x_t = \gamma + \sum_{i=1}^{p} \rho_i x_{t-i} + e_t
 $$
 
 [Campbell and Yogo (2006)](https://www.sciencedirect.com/science/article/abs/pii/S0304405X05002151) address these limitations by proposing the **Bonferroni Q-test**. This test refines the infeasible uniformly most powerful Q-test by applying the Bonferroni method.
 
 $$
-Q(\beta_0, \rho) = \frac{\sum_{t=1}^{T} x^{\mu}_{t-1} \left[ r_t - \beta_0 x_{t-1} - \beta_{ue} (x_t - \rho x_{t-1}) \right]}{\sigma_u (1 - \delta^2)^{1/2} \left( \sum_{t=1}^{T} x^{\mu 2}_{t-1} \right)^{1/2}}
+Q\left(\beta_0, \rho\right)=\frac{\sum_{t=1}^T x_{t-1}^\mu\left[r_t-\beta_0 x_{t-1}-\beta_{u e}\left(x_t-\rho x_{t-1}\right)\right]}{\sigma_u\left(1-\delta^2\right)^{1 / 2}\left(\sum_{t=1}^T x_{t-1}^{\mu 2}\right)^{1 / 2}}
 $$
 
 ## Overview
