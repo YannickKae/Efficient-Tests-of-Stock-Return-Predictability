@@ -29,7 +29,7 @@ The R code implements the testing procedure as described in the paper *Implement
 
 ### Data Preparation
 - **Importing Data**: The script imports stock market data from an Excel file using the `readxl` library. It specifically selects rows based on a predefined frequency (`freq`).
-- **Variable Definition**: Defines `m` as the log-transformed predictor variable (e.g., 'icape') and `y` as the log difference of stock returns.
+- **Variable Definition**: Defines `m` as the log-transformed predictor variable and `y` as the log difference of stock returns.
 
 ### Bayes Information Criterion (BIC)
 - **Function Definition**: A function is created to calculate the Bayesian Information Criterion (BIC) for AR(p) models. This function evaluates the BIC value, aiding in model selection.
