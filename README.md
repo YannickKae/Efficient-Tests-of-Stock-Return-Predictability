@@ -20,7 +20,7 @@ $$
 [Campbell and Yogo (2006)](https://www.sciencedirect.com/science/article/abs/pii/S0304405X05002151) address these limitations by proposing the **Bonferroni Q-test**. This test refines the infeasible uniformly most powerful Q-test by applying the Bonferroni method.
 
 $$
-Q\left(\beta_0, \rho\right)=\frac{\sum_{t=1}^T x_{t-1}^\mu\left[r_t-\beta_0 x_{t-1}-\beta_{u e}\left(x_t-\rho x_{t-1}\right)\right]}{\sigma_u\left(1-\delta^2\right)^{1 / 2}\left(\sum_{t=1}^T x_{t-1}^{\mu 2}\right)^{1 / 2}}
+Q(\beta_0, \rho) = \frac{x_0^\mu(r_1 - \beta_0 x_0 - \beta_{ue}(x_1 - \rho x_0)) + \ldots + x_{T-1}^\mu(r_T - \beta_0 x_{T-1} - \beta_{ue}(x_T - \rho x_{T-1}))}{\sigma_u \sqrt{1 - \delta^2} \sqrt{x_0^{\mu 2} + \ldots + x_{T-1}^{\mu 2}}}
 $$
 
 ## Overview
@@ -34,6 +34,8 @@ The R code implements the testing procedure and is divided into several steps:
 3. **Bonferroni Q-test**: The final block of code performs the Bonferroni Q-test using the intermediate values calculated in the previous step. The test is used to determine whether the slope coefficient beta of the linear regression is significantly different from 0. This can be used to test the hypothesis that the predictor variable is related to the response variable (stock returns).
 
 ## Results Interpretation
+
+At the end of the code, a plot is rendered showing the confidence interval of the OLS estimator as a function of persistence. If this does not include 0 in any case, the null hypothesis can be rejected. If it does, one must weigh how to evaluate the persistence values for which the confidence interval of the OLS estimator includes 0.
 
 <p align="center">
   <img src="Result.png" style="width:100%">
